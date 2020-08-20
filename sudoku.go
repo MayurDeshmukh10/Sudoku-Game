@@ -6,6 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/urfave/negroni"
@@ -32,8 +34,8 @@ func displayGrid(grid [9][9]int) {
 var LEVEL int = 1
 
 func checkViolation(grid [9][9]int, row, column, element int) bool {
-	var x int
-	var y int
+	// var x int
+	// var y int
 	// load row
 	var gridrow [9]int = grid[row]
 	var gridcolumn [9]int
@@ -62,6 +64,66 @@ func checkViolation(grid [9][9]int, row, column, element int) bool {
 		}
 	}
 
+	blockCheck := checkBlockViolation(row, column, element, grid)
+	if blockCheck {
+		return true
+	}
+	// switch {
+	// case row < 3 && column < 3:
+	// 	x = 0
+	// 	y = 0
+	// 	// fmt.Println("Block 1")
+	// case row < 3 && (column > 2 && column < 6):
+	// 	x = 0
+	// 	y = 3
+	// 	// fmt.Println("Block 2")
+	// case row < 3 && (column > 5 && column < 9):
+	// 	x = 0
+	// 	y = 6
+	// 	// fmt.Println("Block 3")
+	// case (row > 2 && row < 6) && (column < 3):
+	// 	x = 3
+	// 	y = 0
+	// 	// fmt.Println("Block 4")
+	// case (row > 2 && row < 6) && (column > 2 && column < 6):
+	// 	x = 3
+	// 	y = 3
+	// 	// fmt.Println("Block 5")
+	// case (row > 2 && row < 6) && (column > 5 && column < 9):
+	// 	x = 3
+	// 	y = 6
+	// 	// fmt.Println("Block 6")
+	// case (row > 5) && (column < 3):
+	// 	x = 6
+	// 	y = 0
+	// 	// fmt.Println("Block 7")
+	// case (row > 5) && (column > 2 && column < 6):
+	// 	x = 6
+	// 	y = 3
+	// 	// fmt.Println("Block 8")
+	// case (row > 5) && (column > 5 && column < 9):
+	// 	x = 6
+	// 	y = 6
+	// 	// fmt.Println("Block 9")
+
+	// }
+
+	// // check block violation
+	// for i := x; i < x+3; i++ {
+	// 	for j := y; j < y+3; j++ {
+	// 		if element == grid[i][j] {
+	// 			// fmt.Println("Block Violation")
+	// 			return true
+	// 		}
+	// 	}
+	// }
+	return false
+
+}
+
+func checkBlockViolation(row, column, element int, grid [9][9]int) bool {
+	var x int
+	var y int
 	switch {
 	case row < 3 && column < 3:
 		x = 0
@@ -112,7 +174,6 @@ func checkViolation(grid [9][9]int, row, column, element int) bool {
 		}
 	}
 	return false
-
 }
 
 // }1,1
@@ -137,7 +198,7 @@ func removeFromAvailable(available []int, element int) []int {
 	return append(available[:index], available[index+1:]...)
 }
 
-func generateGrid(grid [9][9]int, available [81][]int) ([9][9]int, error) {
+func (s *Sudoku) generateGrid() error {
 	// for
 	var j int
 	// var k int
@@ -153,33 +214,33 @@ func generateGrid(grid [9][9]int, available [81][]int) ([9][9]int, error) {
 			if j == -1 {
 				// j = 0
 				// break
-				return grid, fmt.Errorf("Gridlock")
+				return fmt.Errorf("Gridlock")
 			}
 
 			index := getIndex(i, j)
 
-			if len(available[index]) != 0 {
-				randomIndex := getRandomNumber(len(available[index]))
+			if len(s.available[index]) != 0 {
+				randomIndex := getRandomNumber(len(s.available[index]))
 				// fmt.Printf("Random Index %v %v ", index, randomIndex)
 
-				element := available[index][randomIndex]
+				element := s.available[index][randomIndex]
 
 				// fmt.Println(element)
-				check := checkViolation(grid, i, j, element)
+				check := checkViolation(s.grid, i, j, element)
 				if check == false {
-					grid[i][j] = element
+					s.grid[i][j] = element
 					// displayGrid(grid)
 					// fmt.Println(element)
 					// new_grid = append(new_grid, element)
-					available[index] = removeFromAvailable(available[index], element)
+					s.available[index] = removeFromAvailable(s.available[index], element)
 					j++
 					// break
 				} else {
-					available[index] = removeFromAvailable(available[index], element)
+					s.available[index] = removeFromAvailable(s.available[index], element)
 				}
 			} else {
 				for i := 0; i < 9; i++ {
-					available[index] = append(available[index], i+1)
+					s.available[index] = append(s.available[index], i+1)
 
 				}
 				// if j == -1 {
@@ -190,7 +251,7 @@ func generateGrid(grid [9][9]int, available [81][]int) ([9][9]int, error) {
 				b := j
 
 				if b != 0 {
-					grid[i][b-1] = 0
+					s.grid[i][b-1] = 0
 				}
 
 				// fmt.Println("available :", available[index])
@@ -202,17 +263,17 @@ func generateGrid(grid [9][9]int, available [81][]int) ([9][9]int, error) {
 	fmt.Println("Counter :", counter)
 	fmt.Println()
 
-	return grid, nil
+	return nil
 
 }
 
-func getGridForUser(grid [9][9]int, blankBoxes int) [9][9]int {
+func (s *Sudoku) getGridForUser(blankBoxes int) {
+	s.userGrid = s.grid
 	for i := 0; i < blankBoxes; i++ {
 		row := getRandomNumber(9)
 		col := getRandomNumber(9)
-		grid[row][col] = 0
+		s.userGrid[row][col] = 0
 	}
-	return grid
 }
 
 func (s *Sudoku) initializeAvailable() {
@@ -236,22 +297,90 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, "home.html")
 }
 
+func getStringArray(userGrid [9][9]int) string {
+	var str string
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			str = str + strconv.Itoa(userGrid[i][j])
+			// string_array = append(string_array, strconv.Itoa(userGrid[i][j]))
+		}
+	}
+	return str
+}
+
+func (s *Sudoku) checkWin() bool {
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if s.grid[i][j] != s.userGrid[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 	c, err := upgrader.Upgrade(rw, req, nil)
 	if err != nil {
 		log.Print("Upgrade : ", err)
 	}
+	// c.WriteMessage(websocket.TextMessage, []byte("Hello from Server"))
 	s := Sudoku{}
-	// s.initializeAvailable()
+	s.initializeAvailable()
+	s.generateGrid()
+	s.getGridForUser(60)
+	fmt.Println("Answer")
+	displayGrid(s.grid)
+	fmt.Printf("\n\nServer Grid")
+	str := getStringArray(s.userGrid)
+	fmt.Println("string : ", str)
+	c.WriteMessage(websocket.TextMessage, []byte(str))
 
-	c.WriteMessage(websocket.TextMessage, []byte("Hello from Server"))
+	for {
+
+		_, recvData, err := c.ReadMessage()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		data := string(recvData)
+		split := strings.Split(data, ",")
+		value, _ := strconv.Atoi(split[0])
+		row, _ := strconv.Atoi(split[1])
+		col, _ := strconv.Atoi(split[2])
+		blockCheck := checkViolation(s.userGrid, row, col, value)
+		if blockCheck {
+			c.WriteMessage(websocket.TextMessage, []byte("violation"))
+		} else {
+			s.userGrid[row][col] = value
+			win := s.checkWin()
+			if win {
+				c.WriteMessage(websocket.TextMessage, []byte("win"))
+				break
+			}
+		}
+		fmt.Printf("Value : %v and Row : %v Col : %v\n ", value, row, col)
+
+	}
+
+	fmt.Println("Out of for loop")
+	// displayGrid(s.userGrid)
+	// for i := 0; i < 9; i++ {
+	// 	for j := 0; j < 9; j++ {
+	// 		// fmt.Println(string(s.userGrid[i][j]))
+	// 		c.WriteMessage(websocket.TextMessage, []byte(strconv.Itoa(s.userGrid[i][j])))
+	// 	}
+	// }
+
 }
 
 var homeTemplate = template.Must
 
 type Sudoku struct {
 	grid      [9][9]int
+	userGrid  [9][9]int
 	available [81][]int
+	result    [][]int
 }
 
 func main() {
@@ -295,25 +424,25 @@ func main() {
 	fmt.Println("Welcome to sudoku")
 	// displayGrid(grid)
 	var err error
-	s.grid, err = generateGrid(s.grid, s.available)
+	err = s.generateGrid()
 	// time.Sleep(5 * time.Second)
 	if err != nil {
 		s.grid = [9][9]int{}
 		fmt.Println(err)
-		s.grid, err = generateGrid(s.grid, s.available)
+		err = s.generateGrid()
 		// time.Sleep(5 * time.Second)
 	}
 
 	displayGrid(s.grid)
 
-	// userGrid = getGridForUser(grid, 60)
-	// fmt.Println("User Grid")
-	// displayGrid(userGrid)
+	s.getGridForUser(60)
+	fmt.Printf("User Grid\n\n")
+	displayGrid(s.userGrid)
 
 	router := InitRouter()
 	server := negroni.Classic()
 	server.UseHandler(router)
 
-	server.Run(":8000")
+	server.Run(":9000")
 
 }
