@@ -17,7 +17,7 @@ import (
 var upgrader = websocket.Upgrader{}
 
 // Blank boxes for user grid
-var BLANK_BOXES int = 45
+var BLANK_BOXES int = 70
 
 type Sudoku struct {
 	grid      [9][9]int
@@ -39,26 +39,13 @@ func displayGrid(grid [9][9]int) {
 
 func checkViolation(grid [9][9]int, row, column, element int) bool {
 
-	// load row
-	var gridrow [9]int = grid[row]
-	var gridcolumn [9]int
-
-	// load column
 	for i := 0; i < 9; i++ {
-		gridcolumn[i] = grid[i][column]
-	}
 
-	// TO check row or column violation
-	for i := 0; i < 9; i++ {
-		if element == gridrow[i] {
-			if i != column {
-				return true
-			}
+		if i != column && grid[row][i] == element {
+			return true
 		}
-		if element == gridcolumn[i] {
-			if i != row {
-				return true
-			}
+		if i != row && grid[i][column] == element {
+			return true
 		}
 	}
 
@@ -75,46 +62,54 @@ func checkBlockViolation(row, column, element int, grid [9][9]int) bool {
 	var x int
 	var y int
 
-	// To get starting location of block
-	switch {
-	case row < 3 && column < 3:
-		x = 0
-		y = 0
-		// fmt.Println("Block 1")
-	case row < 3 && (column > 2 && column < 6):
-		x = 0
-		y = 3
-		// fmt.Println("Block 2")
-	case row < 3 && (column > 5 && column < 9):
-		x = 0
-		y = 6
-		// fmt.Println("Block 3")
-	case (row > 2 && row < 6) && (column < 3):
-		x = 3
-		y = 0
-		// fmt.Println("Block 4")
-	case (row > 2 && row < 6) && (column > 2 && column < 6):
-		x = 3
-		y = 3
-		// fmt.Println("Block 5")
-	case (row > 2 && row < 6) && (column > 5 && column < 9):
-		x = 3
-		y = 6
-		// fmt.Println("Block 6")
-	case (row > 5) && (column < 3):
-		x = 6
-		y = 0
-		// fmt.Println("Block 7")
-	case (row > 5) && (column > 2 && column < 6):
-		x = 6
-		y = 3
-		// fmt.Println("Block 8")
-	case (row > 5) && (column > 5 && column < 9):
-		x = 6
-		y = 6
-		// fmt.Println("Block 9")
+	// boxMinRow := (row/3)*3;
+	// boxMaxRow := boxMinRow + 3;
+	// boxMinColumn := (col/3)*3;
+	// boxMaxColumn := boxMinColumn + 3;
 
-	}
+	x = (row / 3) * 3
+	y = (column / 3) * 3
+
+	// To get starting location of block
+	// switch {
+	// case row < 3 && column < 3:
+	// 	x = 0
+	// 	y = 0
+	// 	// fmt.Println("Block 1")
+	// case row < 3 && (column > 2 && column < 6):
+	// 	x = 0
+	// 	y = 3
+	// 	// fmt.Println("Block 2")
+	// case row < 3 && (column > 5 && column < 9):
+	// 	x = 0
+	// 	y = 6
+	// 	// fmt.Println("Block 3")
+	// case (row > 2 && row < 6) && (column < 3):
+	// 	x = 3
+	// 	y = 0
+	// 	// fmt.Println("Block 4")
+	// case (row > 2 && row < 6) && (column > 2 && column < 6):
+	// 	x = 3
+	// 	y = 3
+	// 	// fmt.Println("Block 5")
+	// case (row > 2 && row < 6) && (column > 5 && column < 9):
+	// 	x = 3
+	// 	y = 6
+	// 	// fmt.Println("Block 6")
+	// case (row > 5) && (column < 3):
+	// 	x = 6
+	// 	y = 0
+	// 	// fmt.Println("Block 7")
+	// case (row > 5) && (column > 2 && column < 6):
+	// 	x = 6
+	// 	y = 3
+	// 	// fmt.Println("Block 8")
+	// case (row > 5) && (column > 5 && column < 9):
+	// 	x = 6
+	// 	y = 6
+	// 	// fmt.Println("Block 9")
+
+	// }
 
 	// check block violation
 	for i := x; i < x+3; i++ {
@@ -206,6 +201,7 @@ func (s *Sudoku) generateGrid() error {
 }
 
 // For generating random gap grid for user from actual generated grid
+// To DO = If position is already blank then skip it by checking it is visited earlier or convert row,col position to index or use perm method in rand
 func (s *Sudoku) getGridForUser(blankBoxes int) {
 	s.userGrid = s.grid
 	for i := 0; i < blankBoxes; i++ {
@@ -283,6 +279,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 	displayGrid(s.grid)
 
 	str := getStringArray(s.userGrid)
+	fmt.Println("Server String : ", str)
 	c.WriteMessage(websocket.TextMessage, []byte(str))
 
 	for {
@@ -299,7 +296,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 		value, _ := strconv.Atoi(split[0])
 		row, _ := strconv.Atoi(split[1])
 		col, _ := strconv.Atoi(split[2])
-
+		//To Do - create func for directly checking by comparing grid position value and user entered value
 		blockCheck := checkViolation(s.userGrid, row, col, value)
 		if blockCheck {
 			c.WriteMessage(websocket.TextMessage, []byte("violation"))
@@ -319,7 +316,7 @@ func main() {
 
 	// var grid = [9][9]int{
 	// 	{5, 0, 0, 0, 2, 7, 0, 0, 1},
-	// 	{8, 0, 0, 0, 0, 0, 0, 7, 5},
+	// 	{8, 2, 0, 0, 0, 0, 0, 7, 5},
 	// 	{6, 0, 2, 0, 3, 0, 9, 4, 0},
 	// 	{1, 5, 0, 4, 9, 0, 0, 0, 3},
 	// 	{0, 8, 0, 7, 0, 0, 0, 0, 9},
