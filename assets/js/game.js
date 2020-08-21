@@ -47,6 +47,8 @@ function resetGame() {
 }
         
 function sendMessage(id) {
+
+    console.log("Time : ",input.minutes)
             
     var value = document.getElementById("cell-" + id).value
             

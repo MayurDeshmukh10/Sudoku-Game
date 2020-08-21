@@ -28,7 +28,12 @@ html,
         /* }
         
          */
-
+        #countdown2 {
+            font-family: "Press Start 2P";
+            font-size: 20px;
+            width: 200px;
+            float: right;
+        }
         #userGrid {
             width: 500px;
             margin-left: 350px; 
