@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Sudoku Game</title>
+    <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+    <!-- latest -->
+    <link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
+    <!-- core style only -->
+    <link href="https://unpkg.com/nes.css/css/nes-core.min.css" rel="stylesheet" />
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="/js/grid.css" />
+    <script src="/js/game.js"></script> -->
+    <style type="text/css">
+        html,
+        body {
+            background-color: #FAFAFA;
+            background-color: #cccccc;
+            width: 100%;
+            height: 100%;
+            background-attachment: fixed;
+            /* height: auto; */
+            /* width: auto; */
+        }
+
+        table {
+            border: 2px solid #000000;
+        }
+
+        td {
+            border: 1px solid #000000;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* #grid { */
+            /* margin-right: auto; */
+            /* margin:auto; */
+            /* margin-top: 200px; */
+            /* margin-left: 0px; */
+            /* margin-top: 200px; */
+        /* }
+        
+         */
+
+        #userGrid {
+            width: 500px;
+            margin-left: 350px; 
+            align-self: auto;
+            margin-top: 100px;
+        }
+        #resetButton {
+            /* float: center; */
+        
+            /* margin-top: 200px; */
+            /* margin-left: 400px; */
+            
+            /* margin-right: 500px; */
+            /* margin-left: 500px; */
+        }
+
+        #welcomeMsg {
+            font-size: 30px;
+            margin-top: 100px;
+            margin-left: 300px;
+            
+            font-family: "Press Start 2P";
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+
+        input {
+            color: #000000;
+            padding: 0;
+            border: 0;
+            text-align: center;
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+            background-color: #FFFFFF;
+            outline: none;
+            
+        }
+        /* .container {
+            height: auto;
+            width: auto;
+        } */
+        input:disabled {
+            background-color: #EEEEEE;
+        }
+
+        #cell-0,
+        #cell-1,
+        #cell-2 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-2,
+        #cell-11,
+        #cell-20 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-18,
+        #cell-19,
+        #cell-20 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-0,
+        #cell-9,
+        #cell-18 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-3,
+        #cell-4,
+        #cell-5 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-5,
+        #cell-14,
+        #cell-23 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-21,
+        #cell-22,
+        #cell-23 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-3,
+        #cell-12,
+        #cell-21 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-6,
+        #cell-7,
+        #cell-8 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-8,
+        #cell-17,
+        #cell-26 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-24,
+        #cell-25,
+        #cell-26 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-6,
+        #cell-15,
+        #cell-24 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-27,
+        #cell-28,
+        #cell-29 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-29,
+        #cell-38,
+        #cell-47 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-45,
+        #cell-46,
+        #cell-47 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-27,
+        #cell-36,
+        #cell-45 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-30,
+        #cell-31,
+        #cell-32 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-32,
+        #cell-41,
+        #cell-50 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-48,
+        #cell-49,
+        #cell-50 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-30,
+        #cell-39,
+        #cell-48 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-33,
+        #cell-34,
+        #cell-35 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-35,
+        #cell-44,
+        #cell-53 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-51,
+        #cell-52,
+        #cell-53 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-33,
+        #cell-42,
+        #cell-51 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-54,
+        #cell-55,
+        #cell-56 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-56,
+        #cell-65,
+        #cell-74 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-72,
+        #cell-73,
+        #cell-74 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-54,
+        #cell-63,
+        #cell-72 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-57,
+        #cell-58,
+        #cell-59 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-59,
+        #cell-68,
+        #cell-77 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-75,
+        #cell-76,
+        #cell-77 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-57,
+        #cell-66,
+        #cell-75 {
+            border-left: 2px solid #000000;
+        }
+
+        #cell-60,
+        #cell-61,
+        #cell-62 {
+            border-top: 2px solid #000000;
+        }
+
+        #cell-62,
+        #cell-71,
+        #cell-80 {
+            border-right: 2px solid #000000;
+        }
+
+        #cell-78,
+        #cell-79,
+        #cell-80 {
+            border-bottom: 2px solid #000000;
+        }
+
+        #cell-60,
+        #cell-69,
+        #cell-78 {
+            border-left: 2px solid #000000;
+        }
+    </style>
+    <script>
+        var conn
+        function loadGame() {
+            conn = new WebSocket("ws://" + document.location.host + "/ws");
+                conn.close = function () {
+                    console.log("Connection with Server closed")
+            }
+            conn.onmessage = function (server_data) {
+                    var message = server_data.data
+                    console.log("Message len :", message.length)
+                    var tr;
+                    var tbl = document.getElementById("grid")
+                    for (var i = 0; i < message.length; i++) {
+                        if (i % 9 == 0) {
+                            console.log("In tr")
+                            tr = document.createElement("tr")
+                            tbl.appendChild(tr)
+                        }
+                        var td = document.createElement('td')
+                        // td.innerHTML = message[i]
+                        if (message[i] == '0') {
+                            td.innerHTML = "<input id='cell-" + i + "'  type='number' min='1' max='9'  value='' onchange='sendMessage(" + i + ")'>"
+                        } else {
+                            td.innerHTML = "<input id='cell-" + i + "'  type='text' value='" + message[i] + "'disabled>"
+                        }
+
+                        tr.appendChild(td)
+                        // console.log(message[i])
+
+                    }
+                    console.log("Server : ", message)
+                }
+
+        }
+        window.onload = function () {
+            if (window["WebSocket"]) {
+                loadGame()
+            } else {
+                console.log("Your Browser does not websocket")
+                alert("Your Browser does not websocket")
+            }
+        }
+
+        function resetGame() {
+            location.reload();
+        }
+        function sendMessage(id) {
+            var value = document.getElementById("cell-" + id).value
+            document.getElementById("cell-"+id).style.background = 'white'
+            console.log("You have selected : ", value)
+            if(parseInt(value) >= 1 && parseInt(value) <= 9) {
+                row = parseInt(id)/9
+                row = Math.floor(row)
+                col = parseInt(id)%9
+                conn.send(value + ',' + row + ',' + col)
+                conn.onmessage = function (server_data) {
+                    console.log(server_data.data)
+                    if(server_data.data == 'violation'){
+                        document.getElementById("cell-"+id).style.background = 'red'
+                    } else if(server_data.data == 'win') {
+                        Swal.fire({
+                        title: 'You Won !',
+                        imageUrl: 'https://res.cloudinary.com/mayur-cloud/image/upload/c_scale,h_400,w_600/v1597923424/trophy_pyhh2f.jpg',
+                        imageWidth: 400,
+                        imageHeight: 300,
+                        imageAlt: 'Winner',
+                        })
+                    }
+                    
+                }
+            }else {
+                document.getElementById("cell-"+id).style.background = 'red'
+            }
+            
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+       
+        <span id='welcomeMsg'class="nes-text is-primary">Welcome to Sudoku !</span><br>
+        <button id='resetButton' type="button" class="nes-btn is-primary" onclick="resetGame()">New Game</button>
+        <div id='userGrid'>
+        <table id="grid"></table>
+    </div>
+
+    </div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+
+</html>
+
+
