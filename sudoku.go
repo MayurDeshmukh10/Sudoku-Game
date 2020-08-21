@@ -251,11 +251,7 @@ func (s *Sudoku) checkWin() bool {
 func InitRouter() (router *mux.Router) {
 	router = mux.NewRouter()
 
-	// cssHandler := http.FileServer(http.Dir("./css/"))
-	// jsHandler := http.FileServer(http.Dir("./js/"))
-	// http.Handle("/css/", http.StripPrefix("/css/", cssHandler))
-	// http.Handle("/js/", http.StripPrefix("/js/", jsHandler))
-
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./assets/"))))
 	router.HandleFunc("/", homeHandler).Methods(http.MethodGet)
 	router.HandleFunc("/ws", newGameHandler).Methods(http.MethodGet)
 
