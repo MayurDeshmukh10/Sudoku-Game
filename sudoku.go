@@ -1,14 +1,16 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/urfave/negroni"
@@ -16,8 +18,11 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
-// Blank boxes for user grid
-var BLANK_BOXES int = 70
+var difficultLevel = map[string]int{
+	"0": 30,
+	"1": 50,
+	"2": 70,
+}
 
 type Sudoku struct {
 	grid      [9][9]int
@@ -62,54 +67,8 @@ func checkBlockViolation(row, column, element int, grid [9][9]int) bool {
 	var x int
 	var y int
 
-	// boxMinRow := (row/3)*3;
-	// boxMaxRow := boxMinRow + 3;
-	// boxMinColumn := (col/3)*3;
-	// boxMaxColumn := boxMinColumn + 3;
-
 	x = (row / 3) * 3
 	y = (column / 3) * 3
-
-	// To get starting location of block
-	// switch {
-	// case row < 3 && column < 3:
-	// 	x = 0
-	// 	y = 0
-	// 	// fmt.Println("Block 1")
-	// case row < 3 && (column > 2 && column < 6):
-	// 	x = 0
-	// 	y = 3
-	// 	// fmt.Println("Block 2")
-	// case row < 3 && (column > 5 && column < 9):
-	// 	x = 0
-	// 	y = 6
-	// 	// fmt.Println("Block 3")
-	// case (row > 2 && row < 6) && (column < 3):
-	// 	x = 3
-	// 	y = 0
-	// 	// fmt.Println("Block 4")
-	// case (row > 2 && row < 6) && (column > 2 && column < 6):
-	// 	x = 3
-	// 	y = 3
-	// 	// fmt.Println("Block 5")
-	// case (row > 2 && row < 6) && (column > 5 && column < 9):
-	// 	x = 3
-	// 	y = 6
-	// 	// fmt.Println("Block 6")
-	// case (row > 5) && (column < 3):
-	// 	x = 6
-	// 	y = 0
-	// 	// fmt.Println("Block 7")
-	// case (row > 5) && (column > 2 && column < 6):
-	// 	x = 6
-	// 	y = 3
-	// 	// fmt.Println("Block 8")
-	// case (row > 5) && (column > 5 && column < 9):
-	// 	x = 6
-	// 	y = 6
-	// 	// fmt.Println("Block 9")
-
-	// }
 
 	// check block violation
 	for i := x; i < x+3; i++ {
@@ -129,7 +88,7 @@ func getIndex(row, column int) int {
 
 //To generate random number
 func getRandomNumber(value int) int {
-	rand.Seed(time.Now().UnixNano())
+
 	return rand.Intn(value)
 }
 
@@ -243,6 +202,68 @@ func (s *Sudoku) checkWin() bool {
 	return true
 }
 
+// To save score in database
+func saveScore(userTime time.Duration, name string) {
+	hours := int(userTime / time.Hour)
+	minutes := int(userTime / time.Minute)
+	seconds := int(userTime / time.Second)
+	seconds = seconds - minutes*60
+	current := time.Now()
+	date := current.Format("2006-01-02")
+	usertime := strconv.Itoa(hours) + ":" + strconv.Itoa(minutes) + ":" + strconv.Itoa(seconds)
+
+	db, err := sql.Open("mysql", "mayur:mayur1092@tcp(127.0.0.1:3306)/sudoku")
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	sql := "INSERT INTO Scores(Name, Time, Date) VALUES (?,?,?)"
+
+	insert, err := db.Query(sql, name, usertime, date)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer insert.Close()
+}
+
+type Score struct {
+	Name string `json:"Name"`
+	Time string `json:"Time"`
+}
+
+func getTopScores() string {
+	var top []Score
+	db, err := sql.Open("mysql", "mayur:mayur1092@tcp(127.0.0.1:3306)/sudoku")
+
+	// if there is an error opening the connection, handle it
+	if err != nil {
+		log.Print(err.Error())
+	}
+	defer db.Close()
+
+	results, err := db.Query("SELECT Name, Time FROM Scores Order by Time LIMIT 5")
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+	}
+	for results.Next() {
+		var tag Score
+		// for each row, scan the result into our tag composite object
+		err = results.Scan(&tag.Name, &tag.Time)
+		if err != nil {
+			panic(err.Error()) // proper error handling instead of panic in your app
+		}
+		top = append(top, tag)
+	}
+	jsonData, err := json.Marshal(top)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	return string(jsonData)
+}
+
 // Handling routes
 func InitRouter() (router *mux.Router) {
 	router = mux.NewRouter()
@@ -261,28 +282,51 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 
 //Handler for new game
 func newGameHandler(rw http.ResponseWriter, req *http.Request) {
+	// Start Timer for current game
+	start := time.Now()
+
+	type Score struct {
+		name string
+		time []int
+	}
 	c, err := upgrader.Upgrade(rw, req, nil)
 	if err != nil {
 		log.Print("Upgrade : ", err)
 	}
-	// c.WriteMessage(websocket.TextMessage, []byte("Hello from Server"))
+
+	// To get difficuly level from UI
+	_, recvLevel, err := c.ReadMessage()
+	if err != nil {
+		fmt.Println(err)
+	}
+	blankBoxes := difficultLevel[string(recvLevel)]
+	fmt.Println("Blank boxes : ", blankBoxes)
+	c.WriteMessage(websocket.TextMessage, []byte(getTopScores()))
+
 	s := Sudoku{}
 	s.initializeAvailable()
 	err = s.generateGrid()
 	if err != nil {
+		fmt.Println("Lock")
+		s.grid = [9][9]int{}
+		s.available = [81][]int{}
+		s.initializeAvailable()
 		s.generateGrid()
 	}
 
-	s.getGridForUser(BLANK_BOXES)
+	s.getGridForUser(blankBoxes)
 
 	fmt.Println("Answer")
 	displayGrid(s.grid)
 
 	str := getStringArray(s.userGrid)
-	fmt.Println("Server String : ", str)
+
+	// Send userGrid to UI
 	c.WriteMessage(websocket.TextMessage, []byte(str))
 
 	for {
+		// score := Score{}
+		var userData map[string]int
 
 		_, recvData, err := c.ReadMessage()
 		if err != nil {
@@ -291,11 +335,11 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		//Extracting data from UI
-		data := string(recvData)
-		split := strings.Split(data, ",")
-		value, _ := strconv.Atoi(split[0])
-		row, _ := strconv.Atoi(split[1])
-		col, _ := strconv.Atoi(split[2])
+		_ = json.Unmarshal(recvData, &userData)
+		value := userData["value"]
+		row := userData["row"]
+		col := userData["col"]
+
 		//To Do - create func for directly checking by comparing grid position value and user entered value
 		blockCheck := checkViolation(s.userGrid, row, col, value)
 		if blockCheck {
@@ -305,6 +349,11 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 			win := s.checkWin()
 			if win {
 				c.WriteMessage(websocket.TextMessage, []byte("win"))
+				userTiming := time.Since(start)
+				// Getting player name
+				_, nameData, _ := c.ReadMessage()
+				name := string(nameData)
+				saveScore(userTiming, name)
 				break
 			}
 		}
@@ -313,6 +362,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 
 	// var grid = [9][9]int{
 	// 	{5, 0, 0, 0, 2, 7, 0, 0, 1},
