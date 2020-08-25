@@ -19,15 +19,46 @@
 
 <body>
 
+    
+
     <div class="container">
        
         <span id='welcomeMsg'class="nes-text is-primary">Welcome to Sudoku !</span><br>
         <button id='resetButton' type="button" class="nes-btn is-primary" onclick="resetGame()">New Game</button>
-        <div class="nes-text is-primary" id="countdown2"></div>
-        <div id='userGrid'>
-        <table id="grid"></table>
-        
+        <div id='difficulty'>
+            <label for="dark_select" style="color:#fff">Difficulty Level</label>
+            <div class="nes-select">
+              <select id="level"required id="dark_select" onchange="changeDifficultyLevel()">
+                <option value="0" selected >Easy</option>
+                <option value="1">Medium</option>
+                <option value="2">hard</option>
+              </select>
+            </div>
         </div>
+
+        <div class="nes-text is-primary" id="stopwatch" >
+          <p id="countdown2"></p>
+        </div>
+        <div id='userGrid'>
+          <table id="grid"></table>
+        </div>
+        <div id='score'>
+          <p style="font-size: 25px;">Leader Board</p>
+          <ol id="scoreBoard"></ol>
+        </div>
+        <div id='rules-container' class="nes-container is-rounded with-title is-centered">
+            <p class="title" id='rules'>How to play Sudoku</p>
+            <p id='rules'>The goal of Sudoku is to fill in a 9×9 grid with digits so that each column, row, and 3×3 section contain the numbers between 1 to 9. At the beginning of the game, the 9×9 grid will have some of the squares filled in. Your job is to use logic to fill in the missing digits and complete the grid</p>
+            <div id='rules' class="lists">
+                <ul class="nes-list is-disc">
+                  <li>Any row contains more than one of the same number from 1 to 9</li>
+                  <li>Any column contains more than one of the same number from 1 to 9</li>
+                  <li>Any 3×3 grid contains more than one of the same number from 1 to 9</li>
+                </ul>
+              </div>
+        </div>
+          
+
         
 
     </div>
