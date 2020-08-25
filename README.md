@@ -14,6 +14,7 @@ CREATE DATABASE newdatabase;
 mysql -u [username] -p newdatabase < database.sql
 ```
 ### To run
+```
 go run sudoku.go
 
 Go to - localhost:9000
