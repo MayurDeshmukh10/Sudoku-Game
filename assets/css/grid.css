@@ -35,10 +35,17 @@ html,
             float: right;
         }
         #userGrid {
-            width: 500px;
+            /* width: 500px; */
             margin-left: 350px; 
             align-self: auto;
             margin-top: 100px;
+        }
+
+        #score {
+            font-family: "Press Start 2P";
+            font-size: 15px;
+            color: #209cee;
+            margin-right: 600px;
         }
         #resetButton {
             /* float: center; */
@@ -58,6 +65,23 @@ html,
             font-family: "Press Start 2P";
         }
 
+        #difficulty {
+            /* background-color:#212529;  */
+            background-color: #209cee;
+            padding: 1rem 1.2rem 1rem 1rem;
+            /* width:calc(100% + 8px) */
+            width: 200px;
+            font-family: "Press Start 2P";
+        }
+
+        #rules {
+            font-family: "Press Start 2P";
+        }
+
+        #rules-container {
+            margin-top: 100px;
+            margin-bottom: 50px;
+        }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
