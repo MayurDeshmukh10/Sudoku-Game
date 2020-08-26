@@ -13,6 +13,15 @@ go get github.com/urfave/negroni
 CREATE DATABASE newdatabase;
 mysql -u [username] -p newdatabase < database.sql
 ```
+### Setting Enviroment Variables
+
+```
+Add following in bashrc file
+export DATABASE_USERNAME="Your database username"
+export DATABASE_PASSWORD="Your database password"
+export DATABASE_NAME="Your database name"
+```
+
 ### To run
 ```
 go build *.go
