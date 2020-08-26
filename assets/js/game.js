@@ -15,6 +15,7 @@ function changeDifficultyLevel(){
     console.log("Level selected : ",level)
     loadGame(level)
 }
+
 async function loadGame(level) {
     conn = new WebSocket("ws://" + document.location.host + "/ws");
     conn.close = function () {
@@ -133,7 +134,7 @@ async function sendMessage(id) {
                     }
                 })
                 conn.send(name)
-                loadGame(0)
+                resetGame()
               })();             
         }
                     
