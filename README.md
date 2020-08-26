@@ -15,7 +15,8 @@ mysql -u [username] -p newdatabase < database.sql
 ```
 ### To run
 ```
-go run sudoku.go
+go build *.go
+./server
 
 Go to - localhost:9000
 ```
