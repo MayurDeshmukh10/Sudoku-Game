@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 )
 
 var upgrader = websocket.Upgrader{}
+
+var DB_USER string = os.Getenv("DATABASE_USERNAME")
+var DB_PASSWORD string = os.Getenv("DATABASE_PASSWORD")
+var DB_NAME string = os.Getenv("DATABASE_NAME")
 
 var difficultLevel = map[string]int{
 	"0": 30,
@@ -208,7 +213,7 @@ func saveScore(userTime time.Duration, name string) {
 	date := current.Format("2006-01-02")
 	usertime := strconv.Itoa(hours) + ":" + strconv.Itoa(minutes) + ":" + strconv.Itoa(seconds)
 
-	db, err := sql.Open("mysql", "mayur:mayur1092@tcp(127.0.0.1:3306)/sudoku")
+	db, err := sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
 
 	if err != nil {
 		panic(err.Error())
@@ -232,7 +237,7 @@ type Score struct {
 
 func getTopScores() string {
 	var top []Score
-	db, err := sql.Open("mysql", "mayur:mayur1092@tcp(127.0.0.1:3306)/sudoku")
+	db, err := sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
