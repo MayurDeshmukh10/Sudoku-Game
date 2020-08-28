@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -13,6 +15,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/urfave/negroni"
 )
+
+var dev = flag.Bool("dev", false, "developement mode")
+
+var db, err = sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
 
 // Handling routes
 func initRouter() (router *mux.Router) {
@@ -50,8 +56,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 		fmt.Println(err)
 	}
 	blankBoxes := difficultLevel[string(recvLevel)]
-	fmt.Println("Blank boxes : ", blankBoxes)
-	c.WriteMessage(websocket.TextMessage, []byte(getTopScores()))
+	c.WriteMessage(websocket.TextMessage, []byte(getTopScores(db)))
 
 	s := Sudoku{}
 	s.initializeAvailable()
@@ -66,8 +71,10 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 
 	s.getGridForUser(blankBoxes)
 
-	fmt.Println("Answer")
-	displayGrid(s.grid)
+	if *dev {
+		fmt.Println("Answer")
+		displayGrid(s.grid)
+	}
 
 	str := getStringArray(s.userGrid)
 
@@ -103,7 +110,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 				// Getting player name
 				_, nameData, _ := c.ReadMessage()
 				name := string(nameData)
-				saveScore(userTiming, name)
+				saveScore(db, userTiming, name)
 				break
 			}
 		}
@@ -112,6 +119,7 @@ func newGameHandler(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 
 	// var grid = [9][9]int{
@@ -131,5 +139,6 @@ func main() {
 	server.UseHandler(router)
 
 	server.Run(":3000")
+	defer db.Close()
 
 }
