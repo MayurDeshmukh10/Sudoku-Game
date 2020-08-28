@@ -204,7 +204,7 @@ func (s *Sudoku) checkWin() bool {
 }
 
 // To save score in database
-func saveScore(userTime time.Duration, name string) {
+func saveScore(db *sql.DB, userTime time.Duration, name string) {
 	hours := int(userTime / time.Hour)
 	minutes := int(userTime / time.Minute)
 	seconds := int(userTime / time.Second)
@@ -213,12 +213,9 @@ func saveScore(userTime time.Duration, name string) {
 	date := current.Format("2006-01-02")
 	usertime := strconv.Itoa(hours) + ":" + strconv.Itoa(minutes) + ":" + strconv.Itoa(seconds)
 
-	db, err := sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
-
 	if err != nil {
 		panic(err.Error())
 	}
-	defer db.Close()
 
 	sql := "INSERT INTO Scores(Name, Time, Date) VALUES (?,?,?)"
 
@@ -235,15 +232,14 @@ type Score struct {
 	Time string `json:"Time"`
 }
 
-func getTopScores() string {
+func getTopScores(db *sql.DB) string {
 	var top []Score
-	db, err := sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
+	// db, err := sql.Open("mysql", DB_USER+":"+DB_PASSWORD+"@tcp(127.0.0.1:3306)/"+DB_NAME)
 
 	// if there is an error opening the connection, handle it
 	if err != nil {
 		log.Print(err.Error())
 	}
-	defer db.Close()
 
 	results, err := db.Query("SELECT Name, Time FROM Scores Order by Time LIMIT 5")
 	if err != nil {
