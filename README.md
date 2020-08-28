@@ -27,5 +27,5 @@ export DATABASE_NAME="Your database name"
 go build *.go
 ./server
 
-Go to - localhost:9000
+Go to - localhost:3000
 ```
